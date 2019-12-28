@@ -1,0 +1,3 @@
+@interface FLTableViewCell : UITableViewCell
+
+@end

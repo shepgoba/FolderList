@@ -1,0 +1,9 @@
+Package: com.shepgoba.folderlist
+Name: FolderList
+Depends: mobilesubstrate
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Show a list of all the applications in a folder (like watchOS)
+Maintainer: shepgoba
+Author: shepgoba
+Section: Tweaks
