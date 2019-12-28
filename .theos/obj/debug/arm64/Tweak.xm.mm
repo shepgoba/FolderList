@@ -5,15 +5,19 @@
 @interface UIApplication (poop)
 - (void) launchApplicationWithIdentifier: (NSString*)identifier suspended: (BOOL)suspended;
 @end
-@interface SBIconListView : UIView
--(id)initWithModel:(id)arg1 layoutProvider:(id)arg2 iconLocation:(id)arg3 orientation:(long long)arg4 iconViewProvider:(id)arg5 ;
-@end
 @interface SBWorkspaceEntity
 +(id)entity;
 -(void)setFlag:(long long)arg1 forActivationSetting:(unsigned)arg2 ;
 
 @end
-
+@interface SBIconListView : UIView
+-(id)initWithModel:(id)arg1 layoutProvider:(id)arg2 iconLocation:(id)arg3 orientation:(long long)arg4 iconViewProvider:(id)arg5 ;
+-(void)removeIconAtIndex:(unsigned long long)arg1 ;
+-(void)removeIconView:(id)arg1 ;
+-(void)removeAllIconViews;
+@property (nonatomic,weak) id iconViewProvider;       
+-(id)visibleIcons;
+@end
 @interface SBFolderBackgroundView : UIView
 @end
 
@@ -110,6 +114,7 @@
 @property (nonatomic, strong) SBIconListPageControl *pageControl;
 @property (nonatomic,readonly) long long maximumPageIndex;
 @property (nonatomic, assign) BOOL loadImages;
+@property (nonatomic,copy,readonly) NSArray * iconListViews; 
 -(void)setupAppList;
 -(BOOL)setCurrentPageIndex:(long long)arg1 animated:(BOOL)arg2 ;
 -(id)addEmptyListView;
@@ -130,6 +135,7 @@
 + (instancetype)applicationProxyForIdentifier:(NSString *)identifier;
 @end
 @interface SBIconView : UIView
+
 @end
 
 
@@ -153,6 +159,42 @@
 
 		
 		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -201,10 +243,10 @@
 #define _LOGOS_RETURN_RETAINED
 #endif
 
-@class SBFloatyFolderController; @class SBRootFolderController; 
-static SBFloatyFolderController* (*_logos_orig$_ungrouped$SBFloatyFolderController$initWithConfiguration$)(_LOGOS_SELF_TYPE_INIT SBFloatyFolderController*, SEL, id) _LOGOS_RETURN_RETAINED; static SBFloatyFolderController* _logos_method$_ungrouped$SBFloatyFolderController$initWithConfiguration$(_LOGOS_SELF_TYPE_INIT SBFloatyFolderController*, SEL, id) _LOGOS_RETURN_RETAINED; static void (*_logos_orig$_ungrouped$SBFloatyFolderController$folderControllerWillOpen$)(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, id); static void _logos_method$_ungrouped$SBFloatyFolderController$folderControllerWillOpen$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, id); static CGFloat _logos_method$_ungrouped$SBFloatyFolderController$tableView$heightForRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSIndexPath *); static void (*_logos_orig$_ungrouped$SBFloatyFolderController$viewDidLoad)(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL); static void _logos_method$_ungrouped$SBFloatyFolderController$viewDidLoad(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL); static void _logos_method$_ungrouped$SBFloatyFolderController$tableView$didSelectRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSIndexPath *); static NSInteger _logos_method$_ungrouped$SBFloatyFolderController$numberOfSectionsInTableView$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *); static void _logos_method$_ungrouped$SBFloatyFolderController$tableView$willDisplayCell$forRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, UITableViewCell *, NSIndexPath *); static NSInteger _logos_method$_ungrouped$SBFloatyFolderController$tableView$numberOfRowsInSection$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSInteger); static void (*_logos_orig$_ungrouped$SBFloatyFolderController$traitCollectionDidChange$)(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITraitCollection *); static void _logos_method$_ungrouped$SBFloatyFolderController$traitCollectionDidChange$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITraitCollection *); static UITableViewCell * _logos_method$_ungrouped$SBFloatyFolderController$tableView$cellForRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSIndexPath *); static void _logos_method$_ungrouped$SBFloatyFolderController$setupAppList(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL); static CGFloat _logos_method$_ungrouped$SBFloatyFolderController$tableView$heightForHeaderInSection$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSInteger); static UIView * _logos_method$_ungrouped$SBFloatyFolderController$tableView$viewForHeaderInSection$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSInteger); static void _logos_method$_ungrouped$SBFloatyFolderController$moveToAppListView(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL); 
-static __inline__ __attribute__((always_inline)) __attribute__((unused)) Class _logos_static_class_lookup$SBRootFolderController(void) { static Class _klass; if(!_klass) { _klass = objc_getClass("SBRootFolderController"); } return _klass; }
-#line 182 "Tweak.xm"
+@class SBFloatyFolderController; @class SBRootFolderController; @class SBUIController; @class SBActivationSettings; 
+static SBFloatyFolderController* (*_logos_orig$_ungrouped$SBFloatyFolderController$initWithConfiguration$)(_LOGOS_SELF_TYPE_INIT SBFloatyFolderController*, SEL, id) _LOGOS_RETURN_RETAINED; static SBFloatyFolderController* _logos_method$_ungrouped$SBFloatyFolderController$initWithConfiguration$(_LOGOS_SELF_TYPE_INIT SBFloatyFolderController*, SEL, id) _LOGOS_RETURN_RETAINED; static BOOL (*_logos_orig$_ungrouped$SBFloatyFolderController$folderController$canChangeCurrentPageIndexToIndex$)(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, id, long long); static BOOL _logos_method$_ungrouped$SBFloatyFolderController$folderController$canChangeCurrentPageIndexToIndex$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, id, long long); static CGFloat _logos_method$_ungrouped$SBFloatyFolderController$tableView$heightForRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSIndexPath *); static void (*_logos_orig$_ungrouped$SBFloatyFolderController$viewDidLoad)(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL); static void _logos_method$_ungrouped$SBFloatyFolderController$viewDidLoad(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL); static void _logos_method$_ungrouped$SBFloatyFolderController$tableView$didSelectRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSIndexPath *); static NSInteger _logos_method$_ungrouped$SBFloatyFolderController$numberOfSectionsInTableView$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *); static void _logos_method$_ungrouped$SBFloatyFolderController$tableView$willDisplayCell$forRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, UITableViewCell *, NSIndexPath *); static NSInteger _logos_method$_ungrouped$SBFloatyFolderController$tableView$numberOfRowsInSection$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSInteger); static void (*_logos_orig$_ungrouped$SBFloatyFolderController$traitCollectionDidChange$)(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITraitCollection *); static void _logos_method$_ungrouped$SBFloatyFolderController$traitCollectionDidChange$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITraitCollection *); static UITableViewCell * _logos_method$_ungrouped$SBFloatyFolderController$tableView$cellForRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSIndexPath *); static void _logos_method$_ungrouped$SBFloatyFolderController$setupAppList(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL); static CGFloat _logos_method$_ungrouped$SBFloatyFolderController$tableView$heightForHeaderInSection$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSInteger); static UIView * _logos_method$_ungrouped$SBFloatyFolderController$tableView$viewForHeaderInSection$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST, SEL, UITableView *, NSInteger); 
+static __inline__ __attribute__((always_inline)) __attribute__((unused)) Class _logos_static_class_lookup$SBActivationSettings(void) { static Class _klass; if(!_klass) { _klass = objc_getClass("SBActivationSettings"); } return _klass; }static __inline__ __attribute__((always_inline)) __attribute__((unused)) Class _logos_static_class_lookup$SBRootFolderController(void) { static Class _klass; if(!_klass) { _klass = objc_getClass("SBRootFolderController"); } return _klass; }static __inline__ __attribute__((always_inline)) __attribute__((unused)) Class _logos_static_class_lookup$SBUIController(void) { static Class _klass; if(!_klass) { _klass = objc_getClass("SBUIController"); } return _klass; }
+#line 224 "Tweak.xm"
 
 __attribute__((used)) static NSArray * _logos_method$_ungrouped$SBFloatyFolderController$icons(SBFloatyFolderController * __unused self, SEL __unused _cmd) { return (NSArray *)objc_getAssociatedObject(self, (void *)_logos_method$_ungrouped$SBFloatyFolderController$icons); }; __attribute__((used)) static void _logos_method$_ungrouped$SBFloatyFolderController$setIcons(SBFloatyFolderController * __unused self, SEL __unused _cmd, NSArray * rawValue) { objc_setAssociatedObject(self, (void *)_logos_method$_ungrouped$SBFloatyFolderController$icons, rawValue, OBJC_ASSOCIATION_RETAIN_NONATOMIC); } 
 __attribute__((used)) static UITableView * _logos_method$_ungrouped$SBFloatyFolderController$appListTableView(SBFloatyFolderController * __unused self, SEL __unused _cmd) { return (UITableView *)objc_getAssociatedObject(self, (void *)_logos_method$_ungrouped$SBFloatyFolderController$appListTableView); }; __attribute__((used)) static void _logos_method$_ungrouped$SBFloatyFolderController$setAppListTableView(SBFloatyFolderController * __unused self, SEL __unused _cmd, UITableView * rawValue) { objc_setAssociatedObject(self, (void *)_logos_method$_ungrouped$SBFloatyFolderController$appListTableView, rawValue, OBJC_ASSOCIATION_RETAIN_NONATOMIC); }
@@ -220,23 +262,13 @@ static SBFloatyFolderController* _logos_method$_ungrouped$SBFloatyFolderControll
 	return self;
 }
 
-static void _logos_method$_ungrouped$SBFloatyFolderController$folderControllerWillOpen$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd, id arg1) {
-	_logos_orig$_ungrouped$SBFloatyFolderController$folderControllerWillOpen$(self, _cmd, arg1);
-	NSLog(@"loading");
-	if ( !self.hasSetupAppList) {
-		self.customListView = [self addEmptyListView];
-		[self setupAppList];
-		[self.customListView addSubview: self.appListTableView];
-
-		self.loadImages = YES;
-		self.hasSetupAppList = YES;
-		[self.appListTableView reloadData];
-	}
+static BOOL _logos_method$_ungrouped$SBFloatyFolderController$folderController$canChangeCurrentPageIndexToIndex$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd, id arg1, long long arg2) {
+	return NO;
 }
 
 
 static CGFloat _logos_method$_ungrouped$SBFloatyFolderController$tableView$heightForRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd, UITableView * tableView, NSIndexPath * indexPath) {
-    return 50;
+    return 52;
 }
 
 static void _logos_method$_ungrouped$SBFloatyFolderController$viewDidLoad(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd) {
@@ -245,13 +277,24 @@ static void _logos_method$_ungrouped$SBFloatyFolderController$viewDidLoad(_LOGOS
 		NSLog(@"oh poop: %@", self);
 		return;
 	}
+	self.customListView = self.iconListViews.firstObject;
+	[self.customListView performSelector:@selector(hideAllIcons)];
+	[self setupAppList];
+	[self.customListView addSubview: self.appListTableView];
+
+	self.loadImages = YES;
+	self.hasSetupAppList = YES;
+	[self.appListTableView reloadData];
 	NSLog(@"self.customListView: %@", self.customListView);
 }
 
-
 static void _logos_method$_ungrouped$SBFloatyFolderController$tableView$didSelectRowAtIndexPath$(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd, UITableView * tableView, NSIndexPath * indexPath) {
 	[self.appListTableView deselectRowAtIndexPath:indexPath animated:YES];
-	[[UIApplication sharedApplication] launchApplicationWithIdentifier:[[self.icons[indexPath.section] application] bundleIdentifier] suspended:NO];
+	SBActivationSettings *customSettings = [[_logos_static_class_lookup$SBActivationSettings() alloc] init];
+	[customSettings setFlag:1 forActivationSetting:2];
+	[[_logos_static_class_lookup$SBUIController() sharedInstanceIfExists] activateApplication:[(SBApplicationIcon *)self.icons[indexPath.section] application] fromIcon:nil location:nil activationSettings:customSettings actions:nil];
+
+	
 }
 
 
@@ -267,12 +310,12 @@ static void _logos_method$_ungrouped$SBFloatyFolderController$tableView$willDisp
 	if (self.loadImages) {
 		UIImage *newImage = [UIImage _applicationIconImageForBundleIdentifier:application.bundleIdentifier format:10];
 		cell.imageView.image = newImage;
-		CGSize itemSize = CGSizeMake(30, 30);
-		UIGraphicsBeginImageContextWithOptions(itemSize, NO, UIScreen.mainScreen.scale);
-		CGRect imageRect = CGRectMake(0.0, 0.0, itemSize.width, itemSize.height);
-		[cell.imageView.image drawInRect:imageRect];
-		cell.imageView.image = UIGraphicsGetImageFromCurrentImageContext();
-		UIGraphicsEndImageContext();
+		
+
+
+
+
+
 	}
 }
 
@@ -344,28 +387,8 @@ static UIView * _logos_method$_ungrouped$SBFloatyFolderController$tableView$view
 }
 
 
-static void _logos_method$_ungrouped$SBFloatyFolderController$moveToAppListView(_LOGOS_SELF_TYPE_NORMAL SBFloatyFolderController* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd) {
-	if (!self.hasSetupAppList)
-    	[self setupAppList];
 
-	[UIView transitionWithView:self.folderView.scrollView
-                  duration:0.3
-                   options:UIViewAnimationOptionTransitionCrossDissolve 
-                animations:^(void){
-                            self.folderView.scrollView.hidden = !self.folderView.scrollView.hidden;
-                           }
-                completion:nil];
-	[UIView transitionWithView:self.appListTableView
-                  duration:0.3
-                   options:UIViewAnimationOptionTransitionCrossDissolve 
-                animations:^(void){
-                            self.appListTableView.hidden = !self.appListTableView.hidden;
-                           }
-                completion:nil];
-}
-
-
-static __attribute__((constructor)) void _logosLocalCtor_93214392(int __unused argc, char __unused **argv, char __unused **envp) {
+static __attribute__((constructor)) void _logosLocalCtor_0b3fdbaf(int __unused argc, char __unused **argv, char __unused **envp) {
 	NSLog(@"ran");
-	{Class _logos_class$_ungrouped$SBFloatyFolderController = objc_getClass("SBFloatyFolderController"); MSHookMessageEx(_logos_class$_ungrouped$SBFloatyFolderController, @selector(initWithConfiguration:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$initWithConfiguration$, (IMP*)&_logos_orig$_ungrouped$SBFloatyFolderController$initWithConfiguration$);MSHookMessageEx(_logos_class$_ungrouped$SBFloatyFolderController, @selector(folderControllerWillOpen:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$folderControllerWillOpen$, (IMP*)&_logos_orig$_ungrouped$SBFloatyFolderController$folderControllerWillOpen$);{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(CGFloat), strlen(@encode(CGFloat))); i += strlen(@encode(CGFloat)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSIndexPath *), strlen(@encode(NSIndexPath *))); i += strlen(@encode(NSIndexPath *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:heightForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$heightForRowAtIndexPath$, _typeEncoding); }MSHookMessageEx(_logos_class$_ungrouped$SBFloatyFolderController, @selector(viewDidLoad), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$viewDidLoad, (IMP*)&_logos_orig$_ungrouped$SBFloatyFolderController$viewDidLoad);{ char _typeEncoding[1024]; unsigned int i = 0; _typeEncoding[i] = 'v'; i += 1; _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSIndexPath *), strlen(@encode(NSIndexPath *))); i += strlen(@encode(NSIndexPath *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:didSelectRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$didSelectRowAtIndexPath$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(numberOfSectionsInTableView:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$numberOfSectionsInTableView$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; _typeEncoding[i] = 'v'; i += 1; _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(UITableViewCell *), strlen(@encode(UITableViewCell *))); i += strlen(@encode(UITableViewCell *)); memcpy(_typeEncoding + i, @encode(NSIndexPath *), strlen(@encode(NSIndexPath *))); i += strlen(@encode(NSIndexPath *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:willDisplayCell:forRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$willDisplayCell$forRowAtIndexPath$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:numberOfRowsInSection:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$numberOfRowsInSection$, _typeEncoding); }MSHookMessageEx(_logos_class$_ungrouped$SBFloatyFolderController, @selector(traitCollectionDidChange:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$traitCollectionDidChange$, (IMP*)&_logos_orig$_ungrouped$SBFloatyFolderController$traitCollectionDidChange$);{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(UITableViewCell *), strlen(@encode(UITableViewCell *))); i += strlen(@encode(UITableViewCell *)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSIndexPath *), strlen(@encode(NSIndexPath *))); i += strlen(@encode(NSIndexPath *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:cellForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$cellForRowAtIndexPath$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; _typeEncoding[i] = 'v'; i += 1; _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setupAppList), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setupAppList, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(CGFloat), strlen(@encode(CGFloat))); i += strlen(@encode(CGFloat)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:heightForHeaderInSection:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$heightForHeaderInSection$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(UIView *), strlen(@encode(UIView *))); i += strlen(@encode(UIView *)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:viewForHeaderInSection:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$viewForHeaderInSection$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; _typeEncoding[i] = 'v'; i += 1; _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(moveToAppListView), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$moveToAppListView, _typeEncoding); }{ char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(NSArray *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(icons), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$icons, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(NSArray *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setIcons:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setIcons, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(UITableView *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(appListTableView), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$appListTableView, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(UITableView *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setAppListTableView:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setAppListTableView, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(SBIconListView *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(customListView), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$customListView, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(SBIconListView *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setCustomListView:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setCustomListView, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(NSString *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(cellReuseIdentifier), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$cellReuseIdentifier, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(NSString *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setCellReuseIdentifier:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setCellReuseIdentifier, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(BOOL)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(hasSetupAppList), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$hasSetupAppList, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(BOOL)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setHasSetupAppList:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setHasSetupAppList, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(BOOL)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(loadImages), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$loadImages, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(BOOL)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setLoadImages:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setLoadImages, _typeEncoding); } }
+	{Class _logos_class$_ungrouped$SBFloatyFolderController = objc_getClass("SBFloatyFolderController"); MSHookMessageEx(_logos_class$_ungrouped$SBFloatyFolderController, @selector(initWithConfiguration:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$initWithConfiguration$, (IMP*)&_logos_orig$_ungrouped$SBFloatyFolderController$initWithConfiguration$);MSHookMessageEx(_logos_class$_ungrouped$SBFloatyFolderController, @selector(folderController:canChangeCurrentPageIndexToIndex:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$folderController$canChangeCurrentPageIndexToIndex$, (IMP*)&_logos_orig$_ungrouped$SBFloatyFolderController$folderController$canChangeCurrentPageIndexToIndex$);{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(CGFloat), strlen(@encode(CGFloat))); i += strlen(@encode(CGFloat)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSIndexPath *), strlen(@encode(NSIndexPath *))); i += strlen(@encode(NSIndexPath *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:heightForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$heightForRowAtIndexPath$, _typeEncoding); }MSHookMessageEx(_logos_class$_ungrouped$SBFloatyFolderController, @selector(viewDidLoad), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$viewDidLoad, (IMP*)&_logos_orig$_ungrouped$SBFloatyFolderController$viewDidLoad);{ char _typeEncoding[1024]; unsigned int i = 0; _typeEncoding[i] = 'v'; i += 1; _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSIndexPath *), strlen(@encode(NSIndexPath *))); i += strlen(@encode(NSIndexPath *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:didSelectRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$didSelectRowAtIndexPath$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(numberOfSectionsInTableView:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$numberOfSectionsInTableView$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; _typeEncoding[i] = 'v'; i += 1; _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(UITableViewCell *), strlen(@encode(UITableViewCell *))); i += strlen(@encode(UITableViewCell *)); memcpy(_typeEncoding + i, @encode(NSIndexPath *), strlen(@encode(NSIndexPath *))); i += strlen(@encode(NSIndexPath *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:willDisplayCell:forRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$willDisplayCell$forRowAtIndexPath$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:numberOfRowsInSection:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$numberOfRowsInSection$, _typeEncoding); }MSHookMessageEx(_logos_class$_ungrouped$SBFloatyFolderController, @selector(traitCollectionDidChange:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$traitCollectionDidChange$, (IMP*)&_logos_orig$_ungrouped$SBFloatyFolderController$traitCollectionDidChange$);{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(UITableViewCell *), strlen(@encode(UITableViewCell *))); i += strlen(@encode(UITableViewCell *)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSIndexPath *), strlen(@encode(NSIndexPath *))); i += strlen(@encode(NSIndexPath *)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:cellForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$cellForRowAtIndexPath$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; _typeEncoding[i] = 'v'; i += 1; _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setupAppList), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setupAppList, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(CGFloat), strlen(@encode(CGFloat))); i += strlen(@encode(CGFloat)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:heightForHeaderInSection:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$heightForHeaderInSection$, _typeEncoding); }{ char _typeEncoding[1024]; unsigned int i = 0; memcpy(_typeEncoding + i, @encode(UIView *), strlen(@encode(UIView *))); i += strlen(@encode(UIView *)); _typeEncoding[i] = '@'; i += 1; _typeEncoding[i] = ':'; i += 1; memcpy(_typeEncoding + i, @encode(UITableView *), strlen(@encode(UITableView *))); i += strlen(@encode(UITableView *)); memcpy(_typeEncoding + i, @encode(NSInteger), strlen(@encode(NSInteger))); i += strlen(@encode(NSInteger)); _typeEncoding[i] = '\0'; class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(tableView:viewForHeaderInSection:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$tableView$viewForHeaderInSection$, _typeEncoding); }{ char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(NSArray *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(icons), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$icons, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(NSArray *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setIcons:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setIcons, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(UITableView *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(appListTableView), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$appListTableView, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(UITableView *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setAppListTableView:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setAppListTableView, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(SBIconListView *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(customListView), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$customListView, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(SBIconListView *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setCustomListView:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setCustomListView, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(NSString *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(cellReuseIdentifier), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$cellReuseIdentifier, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(NSString *)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setCellReuseIdentifier:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setCellReuseIdentifier, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(BOOL)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(hasSetupAppList), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$hasSetupAppList, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(BOOL)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setHasSetupAppList:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setHasSetupAppList, _typeEncoding); } { char _typeEncoding[1024]; sprintf(_typeEncoding, "%s@:", @encode(BOOL)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(loadImages), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$loadImages, _typeEncoding); sprintf(_typeEncoding, "v@:%s", @encode(BOOL)); class_addMethod(_logos_class$_ungrouped$SBFloatyFolderController, @selector(setLoadImages:), (IMP)&_logos_method$_ungrouped$SBFloatyFolderController$setLoadImages, _typeEncoding); } }
 }

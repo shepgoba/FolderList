@@ -6,8 +6,9 @@
     frame.size.width -= 2 * 10;
     [super setFrame:frame];
 }
+
 - (void)layoutSubviews {
     [super layoutSubviews];
-    //self.imageView.frame = CGRectMake(0,0,32,32);
+    self.imageView.bounds = CGRectMake(0,0,32,32);
 }
 @end

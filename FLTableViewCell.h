@@ -1,3 +1,5 @@
-@interface FLTableViewCell : UITableViewCell
+@interface FLTableViewCell : UITableViewCell {
+    UIImageView *_imageView;
+}
 
 @end

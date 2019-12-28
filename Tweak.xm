@@ -4,15 +4,19 @@
 @interface UIApplication (poop)
 - (void) launchApplicationWithIdentifier: (NSString*)identifier suspended: (BOOL)suspended;
 @end
-@interface SBIconListView : UIView
--(id)initWithModel:(id)arg1 layoutProvider:(id)arg2 iconLocation:(id)arg3 orientation:(long long)arg4 iconViewProvider:(id)arg5 ;
-@end
 @interface SBWorkspaceEntity
 +(id)entity;
 -(void)setFlag:(long long)arg1 forActivationSetting:(unsigned)arg2 ;
 
 @end
-
+@interface SBIconListView : UIView
+-(id)initWithModel:(id)arg1 layoutProvider:(id)arg2 iconLocation:(id)arg3 orientation:(long long)arg4 iconViewProvider:(id)arg5 ;
+-(void)removeIconAtIndex:(unsigned long long)arg1 ;
+-(void)removeIconView:(id)arg1 ;
+-(void)removeAllIconViews;
+@property (nonatomic,weak) id iconViewProvider;       
+-(id)visibleIcons;
+@end
 @interface SBFolderBackgroundView : UIView
 @end
 
@@ -109,6 +113,7 @@
 @property (nonatomic, strong) SBIconListPageControl *pageControl;
 @property (nonatomic,readonly) long long maximumPageIndex;
 @property (nonatomic, assign) BOOL loadImages;
+@property (nonatomic,copy,readonly) NSArray * iconListViews; 
 -(void)setupAppList;
 -(BOOL)setCurrentPageIndex:(long long)arg1 animated:(BOOL)arg2 ;
 -(id)addEmptyListView;
@@ -129,6 +134,7 @@
 + (instancetype)applicationProxyForIdentifier:(NSString *)identifier;
 @end
 @interface SBIconView : UIView
+
 @end
 /*%hook SBFolder
 %property (nonatomic, assign) BOOL hasAddedFakeIcons;
@@ -179,6 +185,42 @@
 	//%orig([copy copy]);
 	//%orig([copy copy]);
 }*/
+/*
+@interface SBFolderIconImageCache
+@property (nonatomic, strong) UITableView *tableViewPreviewGenerator;
+@end
+
+@interface SBFolderIcon : NSObject
+-(id)folder;
+@end
+@interface SBIconView (b)
++(CGSize)defaultIconImageSize;
+@end
+@interface SBIconGridImage
+@end
+%hook SBFolderIconImageCache
+%property (nonatomic, strong) UITableView *tableViewPreviewGenerator;
+-(id)initWithFolder:(id)arg1 {
+	self = %orig;
+	if (self) {
+		self.tableViewPreviewGenerator = [[UITableView alloc] init];
+	}
+	return self;
+}
++(id)imageForPageAtIndex:(unsigned long long)arg1 inFolderIcon:(id)arg2 listLayout:(id)arg3 gridCellImageProvider:(id)arg4 pool:(id)arg5 {
+	//id orig = %orig;
+	//NSLog(@"orig: %@, %@", orig, [orig class]);
+	CGSize size = [%c(SBIconView) defaultIconImageSize];
+    UIGraphicsBeginImageContext(size);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextSetFillColorWithColor(context, [[UIColor redColor] CGColor]);
+    CGContextFillRect(context, CGRectMake(0, 0, size.width, size.height));
+	NSData *imageData = UIImagePNGRepresentation(UIGraphicsGetImageFromCurrentImageContext());
+    SBIconGridImage *image = [[%c(SBIconGridImage) alloc] initWithData:imageData];
+    UIGraphicsEndImageContext();
+	return image;
+}
+%end*/
 %hook SBFloatyFolderController
 %property (nonatomic, strong) NSArray *icons; 
 %property (nonatomic, strong) UITableView *appListTableView;
@@ -194,23 +236,13 @@
 	return self;
 }
 
--(void)folderControllerWillOpen:(id)arg1 {
-	%orig;
-	NSLog(@"loading");
-	if (/*arg2 == self.maximumPageIndex &&*/ !self.hasSetupAppList) {
-		self.customListView = [self addEmptyListView];
-		[self setupAppList];
-		[self.customListView addSubview: self.appListTableView];
-
-		self.loadImages = YES;
-		self.hasSetupAppList = YES;
-		[self.appListTableView reloadData];
-	}
+-(BOOL)folderController:(id)arg1 canChangeCurrentPageIndexToIndex:(long long)arg2 {
+	return NO;
 }
 %new
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    return 50;
+    return 52;
 }
 
 -(void)viewDidLoad {
@@ -219,13 +251,24 @@
 		NSLog(@"oh poop: %@", self);
 		return;
 	}
+	self.customListView = self.iconListViews.firstObject;
+	[self.customListView performSelector:@selector(hideAllIcons)];
+	[self setupAppList];
+	[self.customListView addSubview: self.appListTableView];
+
+	self.loadImages = YES;
+	self.hasSetupAppList = YES;
+	[self.appListTableView reloadData];
 	NSLog(@"self.customListView: %@", self.customListView);
 }
-
 %new
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	[self.appListTableView deselectRowAtIndexPath:indexPath animated:YES];
-	[[UIApplication sharedApplication] launchApplicationWithIdentifier:[[self.icons[indexPath.section] application] bundleIdentifier] suspended:NO];
+	SBActivationSettings *customSettings = [[%c(SBActivationSettings) alloc] init];
+	[customSettings setFlag:1 forActivationSetting:2];
+	[[%c(SBUIController) sharedInstanceIfExists] activateApplication:[(SBApplicationIcon *)self.icons[indexPath.section] application] fromIcon:nil location:nil activationSettings:customSettings actions:nil];
+
+	//[UIApplication sharedApplication] launchApplicationWithIdentifier:[[self.icons[indexPath.section] application] bundleIdentifier] suspended:NO];
 }
 %new
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -241,12 +284,12 @@
 	if (self.loadImages) {
 		UIImage *newImage = [UIImage _applicationIconImageForBundleIdentifier:application.bundleIdentifier format:10];
 		cell.imageView.image = newImage;
-		CGSize itemSize = CGSizeMake(30, 30);
+		/*CGSize itemSize = CGSizeMake(30, 30);
 		UIGraphicsBeginImageContextWithOptions(itemSize, NO, UIScreen.mainScreen.scale);
 		CGRect imageRect = CGRectMake(0.0, 0.0, itemSize.width, itemSize.height);
 		[cell.imageView.image drawInRect:imageRect];
 		cell.imageView.image = UIGraphicsGetImageFromCurrentImageContext();
-		UIGraphicsEndImageContext();
+		UIGraphicsEndImageContext();*/
 	}
 }
 %new
@@ -317,26 +360,6 @@
     return v;
 }
 
-%new
--(void)moveToAppListView {
-	if (!self.hasSetupAppList)
-    	[self setupAppList];
-
-	[UIView transitionWithView:self.folderView.scrollView
-                  duration:0.3
-                   options:UIViewAnimationOptionTransitionCrossDissolve 
-                animations:^(void){
-                            self.folderView.scrollView.hidden = !self.folderView.scrollView.hidden;
-                           }
-                completion:nil];
-	[UIView transitionWithView:self.appListTableView
-                  duration:0.3
-                   options:UIViewAnimationOptionTransitionCrossDissolve 
-                animations:^(void){
-                            self.appListTableView.hidden = !self.appListTableView.hidden;
-                           }
-                completion:nil];
-}
 %end
 
 %ctor {
