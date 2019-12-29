@@ -1,4 +1,7 @@
 #import "FLTableViewCell.h"
+#import <CoreGraphics/CoreGraphics.h>
+#import <MobileCoreServices/MobileCoreServices.h>
+
 
 #define ALERT(str) [[[UIAlertView alloc] initWithTitle:@"alert" message:str delegate:nil cancelButtonTitle:@"ok" otherButtonTitles:nil] show]
 @interface UIApplication (poop)
@@ -102,7 +105,7 @@
 -(void)_setCurrentPageIndex:(long long)arg1 ;
 @end
 
-@interface SBFloatyFolderController : UIViewController <UITableViewDataSource, UITableViewDelegate>
+@interface SBFloatyFolderController : UIViewController <UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate>
 @property (nonatomic, readonly) SBFloatyFolderView * folderView; 
 @property (nonatomic, strong) UITableView *appListTableView;
 @property (nonatomic, strong) NSString *cellReuseIdentifier;
@@ -221,6 +224,97 @@
 	return image;
 }
 %end*/
+/*%hook SBFolderIconImageView
+-(void)didMoveToWindow {
+	%orig;
+	if (![(UIView *)self isKindOfClass:%c(SBFolderIconImageView)])
+		return;
+	UIView *pageGridContainer = MSHookIvar<UIView *>(self, "_pageGridContainer");
+	pageGridContainer.hidden = YES;
+	CGRect rect = pageGridContainer.frame;
+    UIGraphicsBeginImageContext(rect.size);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextSetFillColorWithColor(context, [[UIColor redColor] CGColor]);
+    CGContextFillRect(context, CGRectMake(0, 0, rect.size.width, rect.size.height));
+	UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+	UIImageView *imageViewContainer = [[UIImageView alloc] initWithImage:image];
+	imageViewContainer.frame = pageGridContainer.frame;
+	[(UIView *)self addSubview:imageViewContainer];
+
+}
+%end*/
+@interface SBFolderIcon
+@property (nonatomic,readonly) SBFolder * folder; 
+@end
+@interface SBApplicationController : NSObject
++(id)sharedInstanceIfExists;
+-(void)requestUninstallApplicationWithBundleIdentifier:(id)arg1 withCompletion:(id)arg2;
+@end
+@interface SBIconGridImage : UIImage
+@end
+
+@interface _SBFolderPageElement : NSObject
+@property (nonatomic,weak) SBFolderIcon * folderIcon; 
+@end
+@interface _SBIconGridWrapperView : UIImageView
+@property (nonatomic, strong) UIImage *newImage;
+@property (nonatomic,retain) _SBFolderPageElement * element;
+@property (nonatomic, strong) NSArray *icons;
+-(UIImage *) drawNewIconInRect:(CGRect)rect;
+@end
+%hook _SBIconGridWrapperView
+%property (nonatomic, strong) UIImage *newImage;
+%property (nonatomic, strong) NSArray *icons;
+
+-(void)setElement:(id)arg1 {
+	%orig;
+	self.icons = self.element.folderIcon.folder.icons;
+}
+
+-(void)setImage:(UIImage*)arg1{
+	NSLog(@"ok setting");
+	%orig([self drawNewIconInRect:self.bounds]);
+}
+%new
+-(UIImage *) drawNewIconInRect:(CGRect)rect {
+	UIColor *cellColor;
+	if (@available(iOS 13, *)) {
+		if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+			cellColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha: 0.6];
+		} else {
+			cellColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.6];
+		}
+	} else {
+		cellColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.6];
+	}
+    UIGraphicsBeginImageContextWithOptions(rect.size, NO, 0);
+    CGColorRef yellow = [[UIColor yellowColor] CGColor];
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextClearRect(context, rect);
+    
+    CGContextSetFillColorWithColor(context, yellow);
+	int index = 0;
+	for (int i = 0; i < rect.size.height; i+=9) {
+		UIBezierPath *bezierPath = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, i, rect.size.width, 7) cornerRadius:2.5];
+		CGContextSetFillColorWithColor(context, cellColor.CGColor);
+		[bezierPath fill];
+		index++;
+	}
+
+    UIImage *anImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    return anImage;
+}
+%end
+
+%hook SBIconGridImage
++(id)gridImageForLayout:(id)arg1 previousGridImage:(id)arg2 previousGridCellIndexToUpdate:(unsigned long long)arg3 pool:(id)arg4 cellImageDrawBlock:(/*^block*/id)arg5 {
+	NSLog(@"%@, %@, %llu, %@, %@", arg1, arg2, arg3, arg4, arg5);
+	return %orig;
+}
+%end
 %hook SBFloatyFolderController
 %property (nonatomic, strong) NSArray *icons; 
 %property (nonatomic, strong) UITableView *appListTableView;
@@ -236,13 +330,9 @@
 	return self;
 }
 
--(BOOL)folderController:(id)arg1 canChangeCurrentPageIndexToIndex:(long long)arg2 {
-	return NO;
-}
 %new
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    return 52;
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return self.customListView ? self.customListView.frame.size.height / 5 : 52;
 }
 
 -(void)viewDidLoad {
@@ -251,11 +341,20 @@
 		NSLog(@"oh poop: %@", self);
 		return;
 	}
+	self.cellReuseIdentifier = @"FLCells";
 	self.customListView = self.iconListViews.firstObject;
+	//self.customListView = [self addEmptyListView];
+	//self.scrollView.scrollEnabled = NO;
 	[self.customListView performSelector:@selector(hideAllIcons)];
 	[self setupAppList];
+	[self.appListTableView registerClass:[FLTableViewCell class] forCellReuseIdentifier: self.cellReuseIdentifier];
 	[self.customListView addSubview: self.appListTableView];
-
+	self.appListTableView.allowsMultipleSelectionDuringEditing = NO;
+	UILongPressGestureRecognizer *lpgr = [[UILongPressGestureRecognizer alloc] 
+	initWithTarget:self action:@selector(handleLongPress:)];
+	lpgr.minimumPressDuration = 2.0; //seconds
+	lpgr.delegate = self;
+	[self.appListTableView addGestureRecognizer:lpgr];
 	self.loadImages = YES;
 	self.hasSetupAppList = YES;
 	[self.appListTableView reloadData];
@@ -265,10 +364,20 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	[self.appListTableView deselectRowAtIndexPath:indexPath animated:YES];
 	SBActivationSettings *customSettings = [[%c(SBActivationSettings) alloc] init];
-	[customSettings setFlag:1 forActivationSetting:2];
+	//[customSettings setFlag:1 forActivationSetting:2];
 	[[%c(SBUIController) sharedInstanceIfExists] activateApplication:[(SBApplicationIcon *)self.icons[indexPath.section] application] fromIcon:nil location:nil activationSettings:customSettings actions:nil];
 
 	//[UIApplication sharedApplication] launchApplicationWithIdentifier:[[self.icons[indexPath.section] application] bundleIdentifier] suspended:NO];
+}
+%new
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+		SBApplication *application = [self.icons[indexPath.section] application];
+        [[%c(SBApplicationController) sharedInstanceIfExists] requestUninstallApplicationWithBundleIdentifier:[application bundleIdentifier] withCompletion:^{
+			[self.appListTableView reloadData];
+		}];
+
+    }    
 }
 %new
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -301,7 +410,22 @@
 	%orig;
 	[self.appListTableView reloadData];
 }
-
+%new
+-(void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer
+{
+	if (gestureRecognizer.state == UIGestureRecognizerStateRecognized)
+	{
+		NSLog(@"cum");
+	}
+	if (gestureRecognizer.state == UIGestureRecognizerStateEnded)
+	{
+		CGPoint touchPoint = [gestureRecognizer locationInView:self.view];
+		NSIndexPath *row = [self.appListTableView indexPathForRowAtPoint:touchPoint];
+		if (row != nil) {
+			
+		}
+	}
+}
 %new
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	FLTableViewCell *cell = [self.appListTableView dequeueReusableCellWithIdentifier:self.cellReuseIdentifier];
