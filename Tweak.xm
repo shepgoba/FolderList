@@ -1,5 +1,5 @@
 #import "FLTableViewCell.h"
-#import "FLAppView.h"
+#import "FLIconEntry.h"
 #import <CoreGraphics/CoreGraphics.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 
@@ -90,7 +90,7 @@ static UITableView *sharedTableView;
     11 - 122x122
     12 - 58x58
  */
- + (UIImage *)_applicationIconImageForBundleIdentifier:(NSString *)bundleIdentifier format:(int)format scale:(CGFloat)scale;
++ (UIImage *)_applicationIconImageForBundleIdentifier:(NSString *)bundleIdentifier format:(int)format scale:(CGFloat)scale;
 + (UIImage *)_applicationIconImageForBundleIdentifier:(NSString *)bundleIdentifier format:(int)format;
 @end
 @interface SBUIController
@@ -120,19 +120,20 @@ static UITableView *sharedTableView;
 @property (nonatomic, strong) NSString *cellReuseIdentifier;
 @property (nonatomic, strong) SBFolder *folder;
 @property (nonatomic, strong) NSArray *icons;
-@property (nonatomic, assign) BOOL hasSetupAppList;
 @property (nonatomic, strong) SBIconListView *customListView;
 @property (nonatomic, strong) SBIconListPageControl *pageControl;
 @property (nonatomic,readonly) long long maximumPageIndex;
-@property (nonatomic, assign) BOOL loadImages;
 @property (nonatomic,copy,readonly) NSArray * iconListViews;
 @property (nonatomic, strong) NSMutableArray *appViews;
 @property (nonatomic, strong) UIScrollView *appListScrollView;
+@property (nonatomic, strong) NSMutableArray *iconEntries;
 - (CAAnimation*)getShakeAnimation;
 -(void)setupAppViews;
 -(void)setupAppList;
 -(BOOL)setCurrentPageIndex:(long long)arg1 animated:(BOOL)arg2 ;
 -(id)addEmptyListView;
+-(void)deselectAllRows;
+-(void)setupIconEntries;
 @end
 
 @interface SBIconListModel : NSObject
@@ -159,6 +160,8 @@ static UITableView *sharedTableView;
 @interface SBApplicationController : NSObject
 +(id)sharedInstanceIfExists;
 -(void)requestUninstallApplicationWithBundleIdentifier:(id)arg1 withCompletion:(id)arg2;
+-(void)uninstallApplication:(id)arg1 ;
+
 @end
 @interface SBIconGridImage : UIImage
 @end
@@ -188,21 +191,33 @@ static UITableView *sharedTableView;
 }
 %end
 //%end
+%group Tweak12
+%hook SBFolderView
+-(unsigned long long)iconListViewCount {
+	return 1;
+}
+%end
+%end
 
+%group Tweak13
 %hook SBFloatyFolderView
 -(unsigned long long)iconListViewCount {
 	return 1;
 }
 %end
+%end
 
 static BOOL ios13;
 %hook SBFolderController
 %property (nonatomic, strong) NSArray *icons; 
-%property (nonatomic, strong) NSMutableArray *appViews;
-%property (nonatomic, strong) UIScrollView *appListScrollView;
 %property (nonatomic, strong) UITableView *appListTableView;
 %property (nonatomic, strong) SBIconListView *customListView;
 %property (nonatomic, strong) NSString *cellReuseIdentifier;
+%property (nonatomic, strong) NSMutableArray *iconEntries;
+/*
+%property (nonatomic, strong) NSMutableArray *appViews;
+%property (nonatomic, strong) UIScrollView *appListScrollView;*/
+
 //-(void)folderView:(id)arg1 willAnimateScrollToPageIndex:(long long)arg2
 
 
@@ -226,18 +241,28 @@ static BOOL ios13;
 	}
 }
 
+%new
+-(void)setupIconEntries {
+	self.iconEntries = [NSMutableArray new];
+	//dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH,  0ul), ^{
+		for (SBApplicationIcon *icon in self.icons) {
+			FLIconEntry *newEntry = [[FLIconEntry alloc] initWithApplication:icon.application];
+			[self.iconEntries addObject: newEntry];
+		}
+	//});
+}
+
 -(void)viewDidLoad {
 	%orig;
-	NSLog(@"lmao");
 	/*if ([self isKindOfClass:%c(SBRootFolderWithDock)] || [self isKindOfClass:%c(SBRootFolderController)])
 		return;*/
 	if ((![self isMemberOfClass:%c(SBFolderController)] && ![self isMemberOfClass:%c(SBFloatyFolderController)]) || [self isKindOfClass:%c(SBRootFolderController)]) {
 		return;
 	}
-	NSLog(@"ok");
 	self.cellReuseIdentifier = @"FLCells";
 	self.customListView = self.iconListViews.firstObject;
 	[self setupAppList];
+	[self setupIconEntries];
 	if (ios13) {
 		[self.customListView hideAllIcons];
 	} else {
@@ -314,6 +339,12 @@ static BOOL ios13;
     return self.icons.count;
 }
 
+%new
+-(void)deselectAllRows {
+	for (NSIndexPath *indexPath in self.appListTableView.indexPathsForSelectedRows) {
+    	[self.appListTableView deselectRowAtIndexPath:indexPath animated:YES];
+	}
+}
 //%new
 /*
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -336,7 +367,7 @@ static BOOL ios13;
 	} else {
 		[self.customListView hideIcons];
 		if (arg1) {
-			[self addEmptyListView];
+			//[self addEmptyListView];
 		}
 	}
 }
@@ -349,44 +380,64 @@ static BOOL ios13;
 	%orig;
 	[self.appListTableView reloadData];
 }
-
 %new
 -(void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer {
 	if (gestureRecognizer.state == UIGestureRecognizerStateRecognized) {
-		NSLog(@"cum");
 	}
 	if (gestureRecognizer.state == UIGestureRecognizerStateEnded) {
-		CGPoint touchPoint = [gestureRecognizer locationInView:self.view];
+		CGPoint touchPoint = [gestureRecognizer locationInView:self.appListTableView];
 		NSIndexPath *row = [self.appListTableView indexPathForRowAtPoint:touchPoint];
 		if (row != nil) {
-			//[self.yourbutton.layer addAnimation:[self getShakeAnimation] forKey:@""];
+			SBApplication *application = [self.icons[row.section] application];
+			NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"displayName" ascending:YES selector:@selector(localizedCaseInsensitiveCompare:)];
+			if (@available(iOS 11, *)) {
+				[[%c(SBApplicationController) sharedInstanceIfExists] requestUninstallApplicationWithBundleIdentifier:application.bundleIdentifier withCompletion: ^{
+					if (ios13) {
+						self.icons = [self.folder.icons sortedArrayUsingDescriptors:@[sortDescriptor]];
+					} else {
+						self.icons = [self.folder.allIcons sortedArrayUsingDescriptors:@[sortDescriptor]];
+					}
+					[self.appListTableView reloadData];
+				}];
+			} else {
+				UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Confirm Deletion"
+							message:[NSString stringWithFormat:@"Are you sure you want to uninstall \"%@\"?", application.displayName]
+							preferredStyle:UIAlertControllerStyleAlert];
+
+				UIAlertAction* deleteAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDestructive
+											handler:^(UIAlertAction * action) {
+												[[%c(SBApplicationController) sharedInstanceIfExists] uninstallApplication:application];
+											}];
+				UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDefault
+											handler:nil];
+				[alert addAction:deleteAction];
+				[alert addAction:defaultAction];
+				[self presentViewController:alert animated:YES completion:nil];
+			}
 		}
 	}
 }
 %new
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-	NSLog(@"we making a new cell");
 	FLTableViewCell *cell = [self.appListTableView dequeueReusableCellWithIdentifier:self.cellReuseIdentifier forIndexPath:indexPath];
-	SBApplication *application = (SBApplication *)[self.icons[indexPath.section] application];
-	if (!cell) {
-		cell = [[FLTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:self.cellReuseIdentifier application:application];	
-	}
-
-	cell.application = application;
+	FLIconEntry *entry = self.iconEntries[indexPath.section];
+	//cell.imageView.image = entry.image;
+	cell.entry = entry;
+	cell.textLabel.text = entry.application.displayName;
+	cell.textLabel.backgroundColor = [UIColor clearColor];
+	//cell.selectionStyle = UITableViewCellSelectionStyleNone;
+	//cell.application = application;
 	cell.appLaunchRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:cell action:@selector(launchApp)];
 	[cell addGestureRecognizer:cell.appLaunchRecognizer];
-	[cell.appLaunchRecognizer setCancelsTouchesInView:NO];
 
 	UIView *myBackView = [[UIView alloc] initWithFrame:cell.frame];
 	myBackView.backgroundColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.3 alpha:0.75];
 	myBackView.layer.cornerRadius = 16;
 	cell.selectedBackgroundView = myBackView;
-
-	//SBApplication *application = [self.icons[indexPath.section] application];
-	cell.textLabel.text = application.displayName;
+	cell.layer.cornerRadius = 16;
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH,  0ul), ^{
-		SBApplication *application = [self.icons[indexPath.section] application];
+		SBApplication *application = ((FLIconEntry *)self.iconEntries[indexPath.section]).application;
 		UIImage *cellImage;
 		if (!ios13) {
 			cellImage = [UIImage _applicationIconImageForBundleIdentifier:application.bundleIdentifier format:0 scale:[UIScreen mainScreen].scale];
@@ -396,23 +447,20 @@ static BOOL ios13;
         dispatch_sync(dispatch_get_main_queue(), ^{
             FLTableViewCell *cell = (FLTableViewCell *)[self.appListTableView cellForRowAtIndexPath:indexPath];
             cell.imageView.image = cellImage;
-			//cell.imageView.layer.cornerRadius = 6;
-			//cell.imageView.layer.masksToBounds = YES;
             [cell setNeedsLayout];
         });
     });
 	
-	//cell.imageView.layer.cornerRadius = 5;
 	if (@available(iOS 13, *)) {
 		if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
 			cell.backgroundColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha: 0.4];
 		} else {
-			cell.backgroundColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.7];
+			cell.backgroundColor = [UIColor colorWithRed:0.85 green:0.85 blue:0.85 alpha: 0.65];
 		}
 	} else {
-		cell.backgroundColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.7];
+		cell.backgroundColor = [UIColor colorWithRed:0.85 green:0.85 blue:0.85 alpha: 0.65];
 	}
-	cell.layer.cornerRadius = 16;
+
 	return cell;
 }
 %new
@@ -427,6 +475,7 @@ static BOOL ios13;
 	self.appListTableView.delegate = self;
 	self.appListTableView.dataSource = self;
 	self.appListTableView.layer.cornerRadius = 38;
+	self.appListTableView.scrollIndicatorInsets = UIEdgeInsetsMake(38, 0, 38, 0);
 	//SBFloatyFolderBackgroundClipView *folderBackgroundClipView = (SBFloatyFolderBackgroundClipView *) self.appListTableView.superview;
 	//NSLog(@"%@ is, ", folderBackgroundClipView);
 	//self.appListTableView.layer.cornerRadius = 38;//MSHookIvar<double>(folderBackgroundClipView.backgroundView, "_continuousCornerRadius");
@@ -451,8 +500,10 @@ static BOOL ios13;
 	NSLog(@"called");
 	if (@available(iOS 13, *)) {
 		ios13 = YES;
+		%init(Tweak13);
 	} else {
 		ios13 = NO;
+		%init(Tweak12);
 	}
 	//sharedTableView = [[UITableView alloc] init];
 	//%init(FolderControllerClass = ios13 ? SBFloatyFolderController : yeet )

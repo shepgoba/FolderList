@@ -1,13 +1,10 @@
-/Users/baapcgaming/tweaks/folderlist/.theos/obj/debug/arm64e/Tweak.xm.829ce647.o: \
-  /Users/baapcgaming/tweaks/folderlist/.theos/obj/debug/arm64e/Tweak.xm.mm \
-  /Users/baapcgaming/theos/Prefix.pch \
+/Users/baapcgaming/tweaks/folderlist/.theos/obj/debug/armv7/FLTableViewCell.m.6f1e022a.o: \
+  FLTableViewCell.m /Users/baapcgaming/theos/Prefix.pch \
   /Users/baapcgaming/theos/vendor/include/_Prefix/BackwardsCompat.h \
   /Users/baapcgaming/theos/vendor/include/_Prefix/IOSMacros.h \
   /Users/baapcgaming/theos/vendor/include/HBLog.h \
   /Users/baapcgaming/theos/vendor/include/CoreFoundation/CFLogUtilities.h \
-  /Users/baapcgaming/tweaks/folderlist/FLTableViewCell.h \
-  /Users/baapcgaming/tweaks/folderlist/FLAppView.h \
-  /Users/baapcgaming/theos/vendor/include/substrate.h
+  FLTableViewCell.h FLIconEntry.h
 
 /Users/baapcgaming/theos/Prefix.pch:
 
@@ -19,8 +16,6 @@
 
 /Users/baapcgaming/theos/vendor/include/CoreFoundation/CFLogUtilities.h:
 
-/Users/baapcgaming/tweaks/folderlist/FLTableViewCell.h:
+FLTableViewCell.h:
 
-/Users/baapcgaming/tweaks/folderlist/FLAppView.h:
-
-/Users/baapcgaming/theos/vendor/include/substrate.h:
+FLIconEntry.h:
