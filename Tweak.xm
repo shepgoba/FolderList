@@ -1,7 +1,9 @@
 #import "FLTableViewCell.h"
+#import "FLAppView.h"
 #import <CoreGraphics/CoreGraphics.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 
+static UITableView *sharedTableView;
 
 #define ALERT(str) [[[UIAlertView alloc] initWithTitle:@"alert" message:str delegate:nil cancelButtonTitle:@"ok" otherButtonTitles:nil] show]
 @interface UIApplication (poop)
@@ -19,6 +21,11 @@
 -(void)removeAllIconViews;
 @property (nonatomic,weak) id iconViewProvider;       
 -(id)visibleIcons;
+-(NSArray *)icons;
+-(void)hideIcons;
+-(void)hideAllIcons;
+-(void)removeIcon:(id)arg1;
+@property (nonatomic, assign) BOOL isInFolder;
 @end
 @interface SBFolderBackgroundView : UIView
 @end
@@ -40,7 +47,6 @@
 -(NSString *)bundleIdentifier;
 -(NSString *)displayName;
 -(id)initWithApplicationInfo:(id)arg1 ;
-
 @end
 
 @interface SBApplicationIcon
@@ -52,7 +58,8 @@
 -(NSArray *)icons;
 -(BOOL)isRootFolder;
 +(BOOL)isRootFolderClass;
-
+-(id)allIcons;
+-(id)folderIcons;
 -(id)insertIcon:(id)arg1 atIndexPath:(id*)arg2 options:(unsigned long long)arg3 ;
 
 @property (nonatomic,assign) BOOL hasAddedFakeIcons;
@@ -64,6 +71,7 @@
 
 @interface SBIconListPageControl : UIPageControl
 @end
+
 //extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean suspended);
 @interface UIImage (UIApplicationIconPrivate)
 /*
@@ -82,6 +90,7 @@
     11 - 122x122
     12 - 58x58
  */
+ + (UIImage *)_applicationIconImageForBundleIdentifier:(NSString *)bundleIdentifier format:(int)format scale:(CGFloat)scale;
 + (UIImage *)_applicationIconImageForBundleIdentifier:(NSString *)bundleIdentifier format:(int)format;
 @end
 @interface SBUIController
@@ -105,7 +114,7 @@
 -(void)_setCurrentPageIndex:(long long)arg1 ;
 @end
 
-@interface SBFloatyFolderController : UIViewController <UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate>
+@interface SBFolderController : UIViewController <UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate>
 @property (nonatomic, readonly) SBFloatyFolderView * folderView; 
 @property (nonatomic, strong) UITableView *appListTableView;
 @property (nonatomic, strong) NSString *cellReuseIdentifier;
@@ -116,7 +125,11 @@
 @property (nonatomic, strong) SBIconListPageControl *pageControl;
 @property (nonatomic,readonly) long long maximumPageIndex;
 @property (nonatomic, assign) BOOL loadImages;
-@property (nonatomic,copy,readonly) NSArray * iconListViews; 
+@property (nonatomic,copy,readonly) NSArray * iconListViews;
+@property (nonatomic, strong) NSMutableArray *appViews;
+@property (nonatomic, strong) UIScrollView *appListScrollView;
+- (CAAnimation*)getShakeAnimation;
+-(void)setupAppViews;
 -(void)setupAppList;
 -(BOOL)setCurrentPageIndex:(long long)arg1 animated:(BOOL)arg2 ;
 -(id)addEmptyListView;
@@ -128,7 +141,7 @@
 -(BOOL)addIcon:(id)arg1 ;
 -(void)addIcons:(id)arg1;
 -(id)insertIcon:(id)arg1 atIndex:(unsigned long long)arg2 options:(unsigned long long)arg3 ;
-
+@property (nonatomic,weak,readonly) SBFolder * folder; 
 @end
 @interface SBIconIndexMutableList
 @end
@@ -139,111 +152,7 @@
 @interface SBIconView : UIView
 
 @end
-/*%hook SBFolder
-%property (nonatomic, assign) BOOL hasAddedFakeIcons;
--(id)initWithUniqueIdentifier:(id)arg1 displayName:(id)arg2 maxListCount:(unsigned long long)arg3 maxIconCountInLists:(unsigned long long)arg4 {
-	self = %orig;
-	if (self) {
-		self.hasAddedFakeIcons = NO;
-	}
-	return self;
-}
--(void)_addList:(id)arg1 {
-	if (!self.hasAddedFakeIcons && ![self isRootFolder]) {
-		SBIconListModel *fakeList = [[%c(SBIconListModel) alloc] initWithFolder:self maxIconCount:9];
-		//NSMutableArray *fakeIcons = [[NSMutableArray alloc] init];
-		for (int i = 0; i < 9; i++) {
-			/*LSApplicationProxy *proxy = [%c(LSApplicationProxy) applicationProxyForIdentifier:@"com.dildo.cum"];
-			SBApplicationInfo *info = [[%c(SBApplicationInfo) alloc] initWithApplicationProxy:proxy];
-			SBApplication *application = [[%c(SBApplication) alloc] initWithApplicationInfo:info];
-			SBApplicationIcon *fakeIcon = [[%c(SBApplicationIcon) a
-			lloc] initWithApplication:application];
-			[fakeList insertIcon:fakeIcon atIndex:i options:nil];*/
-		//NSLog(@"fakeicons: %@", fakeIcons);
-		//[fakeList addIcons:fakeIcons];
-/*-(void)_setLists:(id)arg1 {
-	if ([self isRootFolder] || [%c(SBFolder) isRootFolderClass]) {
-		%orig;
-		return;
-	}
-	NSLog(@"self: %@", self);
-	//SBIconIndexMutableList *lists = arg1;
-	NSLog(@"arg1: %@", [arg1 class]);
-	if (!self.hasAddedFakeIcons) {
-		NSMutableArray *poop = arg1;
-		SBIconListModel *fakeList = [[%c(SBIconListModel) alloc] initWithFolder:self maxIconCount:9];
-		NSMutableArray *fakeIcons = [[NSMutableArray alloc] init];
-		for (int i = 0; i < 9; i++) {
-			SBApplicationIcon *fakeIcon = [[%c(SBApplicationIcon) alloc] initWithApplication:nil];
-			[fakeIcons addObject:fakeIcon];
-		}
-		NSLog(@"fakeicons: %@", fakeIcons);
-		[fakeList addIcons:fakeIcons];
-		[poop insertObject:fakeList atIndex:0];
 
-		%orig(poop);
-		return;
-	}
-	%orig;
-	//%orig([copy copy]);
-	//%orig([copy copy]);
-}*/
-/*
-@interface SBFolderIconImageCache
-@property (nonatomic, strong) UITableView *tableViewPreviewGenerator;
-@end
-
-@interface SBFolderIcon : NSObject
--(id)folder;
-@end
-@interface SBIconView (b)
-+(CGSize)defaultIconImageSize;
-@end
-@interface SBIconGridImage
-@end
-%hook SBFolderIconImageCache
-%property (nonatomic, strong) UITableView *tableViewPreviewGenerator;
--(id)initWithFolder:(id)arg1 {
-	self = %orig;
-	if (self) {
-		self.tableViewPreviewGenerator = [[UITableView alloc] init];
-	}
-	return self;
-}
-+(id)imageForPageAtIndex:(unsigned long long)arg1 inFolderIcon:(id)arg2 listLayout:(id)arg3 gridCellImageProvider:(id)arg4 pool:(id)arg5 {
-	//id orig = %orig;
-	//NSLog(@"orig: %@, %@", orig, [orig class]);
-	CGSize size = [%c(SBIconView) defaultIconImageSize];
-    UIGraphicsBeginImageContext(size);
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextSetFillColorWithColor(context, [[UIColor redColor] CGColor]);
-    CGContextFillRect(context, CGRectMake(0, 0, size.width, size.height));
-	NSData *imageData = UIImagePNGRepresentation(UIGraphicsGetImageFromCurrentImageContext());
-    SBIconGridImage *image = [[%c(SBIconGridImage) alloc] initWithData:imageData];
-    UIGraphicsEndImageContext();
-	return image;
-}
-%end*/
-/*%hook SBFolderIconImageView
--(void)didMoveToWindow {
-	%orig;
-	if (![(UIView *)self isKindOfClass:%c(SBFolderIconImageView)])
-		return;
-	UIView *pageGridContainer = MSHookIvar<UIView *>(self, "_pageGridContainer");
-	pageGridContainer.hidden = YES;
-	CGRect rect = pageGridContainer.frame;
-    UIGraphicsBeginImageContext(rect.size);
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextSetFillColorWithColor(context, [[UIColor redColor] CGColor]);
-    CGContextFillRect(context, CGRectMake(0, 0, rect.size.width, rect.size.height));
-	UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-	UIImageView *imageViewContainer = [[UIImageView alloc] initWithImage:image];
-	imageViewContainer.frame = pageGridContainer.frame;
-	[(UIView *)self addSubview:imageViewContainer];
-
-}
-%end*/
 @interface SBFolderIcon
 @property (nonatomic,readonly) SBFolder * folder; 
 @end
@@ -261,112 +170,133 @@
 @property (nonatomic, strong) UIImage *newImage;
 @property (nonatomic,retain) _SBFolderPageElement * element;
 @property (nonatomic, strong) NSArray *icons;
+@property (nonatomic, assign) BOOL hasLoadedNewImage;
 -(UIImage *) drawNewIconInRect:(CGRect)rect;
 @end
-%hook _SBIconGridWrapperView
-%property (nonatomic, strong) UIImage *newImage;
-%property (nonatomic, strong) NSArray *icons;
-
--(void)setElement:(id)arg1 {
-	%orig;
-	self.icons = self.element.folderIcon.folder.icons;
+@interface SBFolderIconListView : SBIconListView
+@end
+//%group Tweak12
+%hook SBFolderIconListView
+-(id)initWithModel:(id)arg1 orientation:(long long)arg2 viewMap:(id)arg3 {
+	SBIconListModel *customModel = [[%c(SBIconListModel) alloc] initWithFolder:((SBIconListModel *)arg1).folder maxIconCount:0];
+	return %orig(customModel, arg2, arg3);
 }
 
--(void)setImage:(UIImage*)arg1{
-	NSLog(@"ok setting");
-	%orig([self drawNewIconInRect:self.bounds]);
-}
 %new
--(UIImage *) drawNewIconInRect:(CGRect)rect {
-	UIColor *cellColor;
-	if (@available(iOS 13, *)) {
-		if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
-			cellColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha: 0.6];
-		} else {
-			cellColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.6];
-		}
-	} else {
-		cellColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.6];
-	}
-    UIGraphicsBeginImageContextWithOptions(rect.size, NO, 0);
-    CGColorRef yellow = [[UIColor yellowColor] CGColor];
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextClearRect(context, rect);
-    
-    CGContextSetFillColorWithColor(context, yellow);
-	int index = 0;
-	for (int i = 0; i < rect.size.height; i+=9) {
-		UIBezierPath *bezierPath = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, i, rect.size.width, 7) cornerRadius:2.5];
-		CGContextSetFillColorWithColor(context, cellColor.CGColor);
-		[bezierPath fill];
-		index++;
-	}
+-(void) hideIcons {
 
-    UIImage *anImage = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
+}
+%end
+//%end
 
-    return anImage;
+%hook SBFloatyFolderView
+-(unsigned long long)iconListViewCount {
+	return 1;
 }
 %end
 
-%hook SBIconGridImage
-+(id)gridImageForLayout:(id)arg1 previousGridImage:(id)arg2 previousGridCellIndexToUpdate:(unsigned long long)arg3 pool:(id)arg4 cellImageDrawBlock:(/*^block*/id)arg5 {
-	NSLog(@"%@, %@, %llu, %@, %@", arg1, arg2, arg3, arg4, arg5);
-	return %orig;
-}
-%end
-%hook SBFloatyFolderController
+static BOOL ios13;
+%hook SBFolderController
 %property (nonatomic, strong) NSArray *icons; 
+%property (nonatomic, strong) NSMutableArray *appViews;
+%property (nonatomic, strong) UIScrollView *appListScrollView;
 %property (nonatomic, strong) UITableView *appListTableView;
 %property (nonatomic, strong) SBIconListView *customListView;
 %property (nonatomic, strong) NSString *cellReuseIdentifier;
-%property (nonatomic, assign) BOOL hasSetupAppList;
-%property (nonatomic, assign) BOOL loadImages;
 //-(void)folderView:(id)arg1 willAnimateScrollToPageIndex:(long long)arg2
--(id)initWithConfiguration:(id)arg1 {
-	if ((self = %orig)) {
-		self.hasSetupAppList = NO;
-	}
-	return self;
-}
+
 
 %new
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return self.customListView ? self.customListView.frame.size.height / 5 : 52;
+    return 52;//self.customListView ? self.customListView.frame.size.height / 5 : 52;
+}
+
+-(void)setFolder:(SBFolder *)arg1 {
+	%orig;
+	/*if ([self isKindOfClass:%c(SBRootFolderWithDock)] || [self isKindOfClass:%c(SBRootFolderController)])
+		return;*/
+	if (![self isMemberOfClass:%c(SBFolderController)] && ![self isMemberOfClass:%c(SBFloatyFolderController)]) {
+		return;
+	}
+	NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"displayName" ascending:YES selector:@selector(localizedCaseInsensitiveCompare:)];
+	if (ios13) {
+		self.icons = [arg1.icons sortedArrayUsingDescriptors:@[sortDescriptor]];
+	} else {
+		self.icons = [arg1.allIcons sortedArrayUsingDescriptors:@[sortDescriptor]];
+	}
 }
 
 -(void)viewDidLoad {
 	%orig;
-	if ([self isKindOfClass:%c(SBRootFolderController)]) {
-		NSLog(@"oh poop: %@", self);
+	NSLog(@"lmao");
+	/*if ([self isKindOfClass:%c(SBRootFolderWithDock)] || [self isKindOfClass:%c(SBRootFolderController)])
+		return;*/
+	if ((![self isMemberOfClass:%c(SBFolderController)] && ![self isMemberOfClass:%c(SBFloatyFolderController)]) || [self isKindOfClass:%c(SBRootFolderController)]) {
 		return;
 	}
+	NSLog(@"ok");
 	self.cellReuseIdentifier = @"FLCells";
 	self.customListView = self.iconListViews.firstObject;
-	//self.customListView = [self addEmptyListView];
-	//self.scrollView.scrollEnabled = NO;
-	[self.customListView performSelector:@selector(hideAllIcons)];
 	[self setupAppList];
+	if (ios13) {
+		[self.customListView hideAllIcons];
+	} else {
+		[self.customListView hideIcons];
+	}
+
+
 	[self.appListTableView registerClass:[FLTableViewCell class] forCellReuseIdentifier: self.cellReuseIdentifier];
 	[self.customListView addSubview: self.appListTableView];
+
 	self.appListTableView.allowsMultipleSelectionDuringEditing = NO;
 	UILongPressGestureRecognizer *lpgr = [[UILongPressGestureRecognizer alloc] 
 	initWithTarget:self action:@selector(handleLongPress:)];
 	lpgr.minimumPressDuration = 2.0; //seconds
 	lpgr.delegate = self;
 	[self.appListTableView addGestureRecognizer:lpgr];
-	self.loadImages = YES;
-	self.hasSetupAppList = YES;
-	[self.appListTableView reloadData];
-	NSLog(@"self.customListView: %@", self.customListView);
+}/*
+-(void)viewDidLayoutSubviews {
+	%orig;
+	NSLog(@"setting");
+	self.appListScrollView.contentSize = CGSizeMake(self.appListScrollView.frame.size.width, self.icons.count * 62 + 10);
+}*/
+%new 
+-(void)setupAppViews {
+	/*NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"displayName" ascending:YES selector:@selector(localizedCaseInsensitiveCompare:)];
+	self.icons = [self.folder.icons sortedArrayUsingDescriptors:@[sortDescriptor]];
+
+	self.appViews = [NSMutableArray new];
+	self.appListScrollView = [[UIScrollView alloc] initWithFrame:self.customListView.bounds];
+	self.appListScrollView.layer.cornerRadius = 38;
+	self.appListScrollView.contentSize = CGSizeMake(self.appListScrollView.frame.size.width, self.icons.count * 62 + 10);
+	[self.customListView addSubview:self.appListScrollView];
+
+	for (int i = 0; i < self.icons.count; i++) {
+		FLAppView *newAppView = [[FLAppView alloc] init];
+		[newAppView setupWithSuperview:self.appListScrollView viewYOffset:10 + i*62 applicationIcon:[self.icons objectAtIndex:i]];
+		[self.appViews addObject: newAppView];
+	}*/
+}
+%new
+- (CAAnimation*)getShakeAnimation {
+    CAKeyframeAnimation* animation = [CAKeyframeAnimation animationWithKeyPath:@"transform"];
+
+    CGFloat wobbleAngle = 0.06f;
+
+    NSValue* valLeft = [NSValue valueWithCATransform3D:CATransform3DMakeRotation(wobbleAngle, 0.0f, 0.0f, 1.0f)];
+    NSValue* valRight = [NSValue valueWithCATransform3D:CATransform3DMakeRotation(-wobbleAngle, 0.0f, 0.0f, 1.0f)];
+    animation.values = [NSArray arrayWithObjects:valLeft, valRight, nil];
+
+    animation.autoreverses = YES;  
+    animation.duration = 0.125;
+    animation.repeatCount = HUGE_VALF;  
+
+    return animation;    
 }
 %new
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+	//[[%c(SBUIController) sharedInstanceIfExists] activateApplication:[(SBApplicationIcon *)self.icons[indexPath.section] application] fromIcon:nil location:nil activationSettings:nil actions:nil];
 	[self.appListTableView deselectRowAtIndexPath:indexPath animated:YES];
-	SBActivationSettings *customSettings = [[%c(SBActivationSettings) alloc] init];
-	//[customSettings setFlag:1 forActivationSetting:2];
-	[[%c(SBUIController) sharedInstanceIfExists] activateApplication:[(SBApplicationIcon *)self.icons[indexPath.section] application] fromIcon:nil location:nil activationSettings:customSettings actions:nil];
-
 	//[UIApplication sharedApplication] launchApplicationWithIdentifier:[[self.icons[indexPath.section] application] bundleIdentifier] suspended:NO];
 }
 %new
@@ -380,25 +310,34 @@
     }    
 }
 %new
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return self.icons.count;
 }
 
-%new
+//%new
+/*
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-	SBApplication *application = [self.icons[indexPath.section] application];
-	cell.textLabel.text = application.displayName;
 	
 	if (self.loadImages) {
 		UIImage *newImage = [UIImage _applicationIconImageForBundleIdentifier:application.bundleIdentifier format:10];
 		cell.imageView.image = newImage;
-		/*CGSize itemSize = CGSizeMake(30, 30);
+		CGSize itemSize = CGSizeMake(30, 30);
 		UIGraphicsBeginImageContextWithOptions(itemSize, NO, UIScreen.mainScreen.scale);
 		CGRect imageRect = CGRectMake(0.0, 0.0, itemSize.width, itemSize.height);
 		[cell.imageView.image drawInRect:imageRect];
 		cell.imageView.image = UIGraphicsGetImageFromCurrentImageContext();
-		UIGraphicsEndImageContext();*/
+		UIGraphicsEndImageContext();
+	}
+}*/
+-(void)setEditing:(BOOL)arg1 animated:(BOOL)arg2 {
+	%orig;
+	if (ios13) {
+		[self.customListView hideAllIcons];
+	} else {
+		[self.customListView hideIcons];
+		if (arg1) {
+			[self addEmptyListView];
+		}
 	}
 }
 %new
@@ -410,55 +349,79 @@
 	%orig;
 	[self.appListTableView reloadData];
 }
+
 %new
--(void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer
-{
-	if (gestureRecognizer.state == UIGestureRecognizerStateRecognized)
-	{
+-(void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer {
+	if (gestureRecognizer.state == UIGestureRecognizerStateRecognized) {
 		NSLog(@"cum");
 	}
-	if (gestureRecognizer.state == UIGestureRecognizerStateEnded)
-	{
+	if (gestureRecognizer.state == UIGestureRecognizerStateEnded) {
 		CGPoint touchPoint = [gestureRecognizer locationInView:self.view];
 		NSIndexPath *row = [self.appListTableView indexPathForRowAtPoint:touchPoint];
 		if (row != nil) {
-			
+			//[self.yourbutton.layer addAnimation:[self getShakeAnimation] forKey:@""];
 		}
 	}
 }
 %new
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-	FLTableViewCell *cell = [self.appListTableView dequeueReusableCellWithIdentifier:self.cellReuseIdentifier];
+	NSLog(@"we making a new cell");
+	FLTableViewCell *cell = [self.appListTableView dequeueReusableCellWithIdentifier:self.cellReuseIdentifier forIndexPath:indexPath];
+	SBApplication *application = (SBApplication *)[self.icons[indexPath.section] application];
 	if (!cell) {
-		cell = [[FLTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:self.cellReuseIdentifier];
-		UIView *myBackView = [[UIView alloc] initWithFrame:cell.frame];
-		myBackView.backgroundColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.3 alpha:0.75];
-		myBackView.layer.cornerRadius = 16;
-		cell.selectedBackgroundView = myBackView;
+		cell = [[FLTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:self.cellReuseIdentifier application:application];	
 	}
+
+	cell.application = application;
+	cell.appLaunchRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:cell action:@selector(launchApp)];
+	[cell addGestureRecognizer:cell.appLaunchRecognizer];
+	[cell.appLaunchRecognizer setCancelsTouchesInView:NO];
+
+	UIView *myBackView = [[UIView alloc] initWithFrame:cell.frame];
+	myBackView.backgroundColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.3 alpha:0.75];
+	myBackView.layer.cornerRadius = 16;
+	cell.selectedBackgroundView = myBackView;
+
+	//SBApplication *application = [self.icons[indexPath.section] application];
+	cell.textLabel.text = application.displayName;
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH,  0ul), ^{
+		SBApplication *application = [self.icons[indexPath.section] application];
+		UIImage *cellImage;
+		if (!ios13) {
+			cellImage = [UIImage _applicationIconImageForBundleIdentifier:application.bundleIdentifier format:0 scale:[UIScreen mainScreen].scale];
+		} else {
+			cellImage = [UIImage _applicationIconImageForBundleIdentifier:application.bundleIdentifier format:10];
+		}
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            FLTableViewCell *cell = (FLTableViewCell *)[self.appListTableView cellForRowAtIndexPath:indexPath];
+            cell.imageView.image = cellImage;
+			//cell.imageView.layer.cornerRadius = 6;
+			//cell.imageView.layer.masksToBounds = YES;
+            [cell setNeedsLayout];
+        });
+    });
+	
+	//cell.imageView.layer.cornerRadius = 5;
 	if (@available(iOS 13, *)) {
 		if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
 			cell.backgroundColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha: 0.4];
 		} else {
-			cell.backgroundColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.4];
+			cell.backgroundColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.7];
 		}
 	} else {
-		cell.backgroundColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.4];
+		cell.backgroundColor = [UIColor colorWithRed:0.65 green:0.65 blue:0.65 alpha: 0.7];
 	}
 	cell.layer.cornerRadius = 16;
 	return cell;
 }
 %new
 -(void)setupAppList {
-	NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"displayName" ascending:YES selector:@selector(localizedCaseInsensitiveCompare:)];
-	self.icons = [self.folder.icons sortedArrayUsingDescriptors:@[sortDescriptor]];
-
-	
-	self.cellReuseIdentifier = @"appListTableViewCell";
-
-	self.appListTableView = [[UITableView alloc] initWithFrame:CGRectMake(self.customListView.bounds.origin.x, self.customListView.bounds.origin.y, self.customListView.bounds.size.width, self.customListView.bounds.size.height)];
-	self.appListTableView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.appListTableView.bounds.size.width, 10)];
-	self.appListTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.appListTableView.bounds.size.width, 10)];
+	NSLog(@"got here");
+	self.appListTableView = [[UITableView alloc] initWithFrame:self.customListView.bounds];
+	//self.appListTableView.frame = self.customListView.bounds;
+	self.appListTableView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.appListTableView.bounds.size.width, 25)];
+	self.appListTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.appListTableView.bounds.size.width, 25)];
 	self.appListTableView.backgroundColor = [UIColor clearColor];
 	self.appListTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
 	self.appListTableView.delegate = self;
@@ -471,14 +434,12 @@
 	//self.hasSetupAppList = YES;
 }
 %new
--(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
-{
-    return 7;
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+    return 8;
 }
 
 %new
--(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
-{
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     UIView *v = [UIView new];
     [v setBackgroundColor:[UIColor clearColor]];
     return v;
@@ -487,6 +448,13 @@
 %end
 
 %ctor {
-	NSLog(@"ran");
+	NSLog(@"called");
+	if (@available(iOS 13, *)) {
+		ios13 = YES;
+	} else {
+		ios13 = NO;
+	}
+	//sharedTableView = [[UITableView alloc] init];
+	//%init(FolderControllerClass = ios13 ? SBFloatyFolderController : yeet )
 	%init(_ungrouped);
 }

@@ -6,6 +6,7 @@
   /Users/baapcgaming/theos/vendor/include/HBLog.h \
   /Users/baapcgaming/theos/vendor/include/CoreFoundation/CFLogUtilities.h \
   /Users/baapcgaming/tweaks/folderlist/FLTableViewCell.h \
+  /Users/baapcgaming/tweaks/folderlist/FLAppView.h \
   /Users/baapcgaming/theos/vendor/include/substrate.h
 
 /Users/baapcgaming/theos/Prefix.pch:
@@ -19,5 +20,7 @@
 /Users/baapcgaming/theos/vendor/include/CoreFoundation/CFLogUtilities.h:
 
 /Users/baapcgaming/tweaks/folderlist/FLTableViewCell.h:
+
+/Users/baapcgaming/tweaks/folderlist/FLAppView.h:
 
 /Users/baapcgaming/theos/vendor/include/substrate.h:
