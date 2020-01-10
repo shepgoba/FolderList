@@ -13,13 +13,37 @@
 @end
 
 @implementation FLTableViewCell
--(id)initWithStyle:(unsigned long long)style reuseIdentifier:(NSString *)reuse application:(SBApplication *)application; {
+/*-(id)initWithStyle:(unsigned long long)style reuseIdentifier:(NSString *)reuse application:(SBApplication *)application; {
     self = [super initWithStyle:style reuseIdentifier:reuse];
     if (self)  {
         //self.application = selfapplication;
 
     }
     return self;
+}*/
+-(void)layoutIfNeeded {
+    [super layoutIfNeeded];
+    self.badgeView.center = CGPointMake(self.frame.size.width - 35, self.frame.size.height / 2);
+    self.badgeTextLabel.center = CGPointMake(self.badgeView.frame.size.width / 2, self.badgeView.frame.size.height / 2);
+}
+
+-(void)setupBadgeView:(NSString *)badgeText {
+    self.badgeView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
+    self.badgeView.layer.cornerRadius = self.badgeView.frame.size.width / 2;
+    self.badgeView.backgroundColor = [UIColor redColor];
+
+    self.badgeTextLabel = [[UILabel alloc] init];
+    self.badgeTextLabel.text = badgeText;
+    self.badgeTextLabel.textAlignment = NSTextAlignmentCenter;
+    self.badgeTextLabel.font = [UIFont boldSystemFontOfSize:12];
+    [self.badgeTextLabel sizeToFit];
+
+    [self addSubview:self.badgeView];
+    [self.badgeView addSubview: self.badgeTextLabel];
+}
+-(void)removeBadgeView {
+    [self.badgeView removeFromSuperview];
+    self.badgeView = nil;
 }
 - (void)setFrame:(CGRect)frame {
     frame.origin.x += 25;
@@ -31,6 +55,14 @@
     [super layoutSubviews];
     self.imageView.bounds = CGRectMake(0,0,32,32);
 }
+
+/*-(void)setSelectedBackgroundView:(UIView *)view {
+    UIView *newView = [[UIView alloc] initWithFrame:self.frame];
+	newView.backgroundColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.3 alpha:0.75];
+    newView.layer.cornerRadius = 16;
+    [super setSelectedBackgroundView:newView];
+}*/
+
 -(void) launchApp {
     AudioServicesPlaySystemSound(1519);
     if (@available(iOS 12, *)) {
