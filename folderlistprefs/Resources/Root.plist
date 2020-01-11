@@ -42,6 +42,18 @@
 		</dict>
 		<dict>
 			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.shepgoba.folderlistprefs</string>
+			<key>key</key>
+			<string>notificationBadgesEnabled</string>
+			<key>label</key>
+			<string>Enable Notification Badges</string>
+		</dict>
+		<dict>
+			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>Sorting Type</string>

@@ -14,7 +14,7 @@ static UITableView *sharedTableView;
 static FLSortType sortType = FLSortTypeNone;
 static BOOL enabled;
 static BOOL replaceOriginalView;
-
+static BOOL notificationBadgesEnabled;
 static void loadPrefs() {
 	static NSMutableDictionary *settings;
 
@@ -29,7 +29,7 @@ static void loadPrefs() {
   	enabled = [([settings objectForKey:@"enabled"] ? [settings objectForKey:@"enabled"] : @(YES)) boolValue];
 	replaceOriginalView = [([settings objectForKey:@"replaceoriginalview"] ? [settings objectForKey:@"replaceoriginalview"] : @(YES)) boolValue];
 	sortType = [([settings objectForKey:@"sortingType"] ? [settings objectForKey:@"sortingType"] : @"0") integerValue];
-
+	notificationBadgesEnabled = [([settings objectForKey:@"notificationBadgesEnabled"] ? [settings objectForKey:@"notificationBadgesEnabled"] : NO) boolValue];
 }
 
 @interface LSApplicationProxy : NSObject
@@ -124,8 +124,11 @@ static void loadPrefs() {
 %group Tweak12
 %hook SBFolderIconListView
 -(id)initWithModel:(id)arg1 orientation:(long long)arg2 viewMap:(id)arg3 {
-	SBIconListModel *customModel = [[%c(SBIconListModel) alloc] initWithFolder:((SBIconListModel *)arg1).folder maxIconCount:0];
-	return %orig(customModel, arg2, arg3);
+	if (replaceOriginalView) {
+		SBIconListModel *customModel = [[%c(SBIconListModel) alloc] initWithFolder:((SBIconListModel *)arg1).folder maxIconCount:0];
+		return %orig(customModel, arg2, arg3);
+	}
+	return %orig;
 }
 %end
 
@@ -161,15 +164,6 @@ static BOOL ios13;
 %property (nonatomic, strong) NSMutableArray *iconEntries;
 %property (nonatomic, assign) BOOL hasAddedCustomView;
 
--(id)initWithConfiguration:(id)arg1 {
-	self = %orig;
-	if (self) {
-		self.hasAddedCustomView = NO;
-		//[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateIcons) name:@"FLBadgesUpdate" object:nil];
-	}
-	return self;
-}
-
 -(void)viewDidLoad {
 	%orig;
 
@@ -180,13 +174,11 @@ static BOOL ios13;
 	self.cellReuseIdentifier = @"FLCells";
 	if (replaceOriginalView) {
 		self.customListView = self.iconListViews.firstObject;
-		[self.customListView hideAllIcons];
+		if (ios13)
+			[self.customListView hideAllIcons];
 		((UIScrollView *)self.customListView.superview).scrollEnabled = NO;
 	} else {
-		if (!self.hasAddedCustomView) {
-			self.customListView = [self addEmptyListView];
-			self.hasAddedCustomView = YES;
-		}
+		self.customListView = [self addEmptyListView];
 	}
 	
 	[self setupAppList];
@@ -199,7 +191,7 @@ static BOOL ios13;
 	UISwipeGestureRecognizer *swipe = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipe:)];
 	swipe.direction = UISwipeGestureRecognizerDirectionLeft; //seconds
 	swipe.delegate = self;
-	swipe.minimumPrimaryMovement = 100;
+	swipe.minimumPrimaryMovement = 125;
 	[self.appListTableView addGestureRecognizer:swipe];
 	if (!replaceOriginalView)
 		[((UIScrollView *)self.customListView.superview).panGestureRecognizer requireGestureRecognizerToFail:swipe];
@@ -207,6 +199,9 @@ static BOOL ios13;
 
 -(void)setEditing:(BOOL)arg1 animated:(BOOL)arg2 {
 	%orig;
+	if (![self isMemberOfClass:%c(SBFolderController)] && ![self isMemberOfClass:%c(SBFloatyFolderController)]) {
+		return;
+	}
 	if (ios13) {
 		[self.customListView hideAllIcons];
 	} else {
@@ -248,6 +243,9 @@ static BOOL ios13;
 
 - (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
 	%orig;
+	if (![self isMemberOfClass:%c(SBFolderController)] && ![self isMemberOfClass:%c(SBFloatyFolderController)]) {
+		return;
+	}
 	[self.appListTableView reloadData];
 }
 
@@ -381,7 +379,7 @@ static BOOL ios13;
 	} else {
 		cell.backgroundColor = [UIColor colorWithRed:0.85 green:0.85 blue:0.85 alpha: 0.65];
 	}
-	if (entry.application.badgeValue != nil) {
+	if (entry.application.badgeValue != nil && notificationBadgesEnabled) {
 		[cell setupBadgeView:[entry.application.badgeValue stringValue]];
 		[cell setNeedsLayout];
 		[cell layoutIfNeeded];
@@ -398,15 +396,15 @@ static BOOL ios13;
 	self.appListTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
 	self.appListTableView.delegate = self;
 	self.appListTableView.dataSource = self;
-	self.appListTableView.layer.cornerRadius = 38;
-	self.appListTableView.scrollIndicatorInsets = UIEdgeInsetsMake(38, 0, 38, 0);
+	//self.appListTableView.layer.cornerRadius = 38;
 	self.appListTableView.sectionHeaderHeight = 8;
 	self.appListTableView.rowHeight = 52;
-	//SBFloatyFolderBackgroundClipView *folderBackgroundClipView = (SBFloatyFolderBackgroundClipView *) self.appListTableView.superview;
-	//NSLog(@"%@ is, ", folderBackgroundClipView);
-	//self.appListTableView.layer.cornerRadius = 38;//MSHookIvar<double>(folderBackgroundClipView.backgroundView, "_continuousCornerRadius");
-	//NSLog(@"%f is", [[folderBackgroundClipView.backgroundView valueForKey:@"_continuousCornerRadius"] doubleValue]);
-	//self.hasSetupAppList = YES;
+
+	SBFloatyFolderBackgroundClipView *folderBackgroundClipView = (SBFloatyFolderBackgroundClipView *) self.customListView.superview.superview;
+	double cornerRadius = MSHookIvar<double>(folderBackgroundClipView.backgroundView, "_continuousCornerRadius");
+	self.appListTableView.layer.cornerRadius = cornerRadius;
+	self.appListTableView.scrollIndicatorInsets = UIEdgeInsetsMake(cornerRadius, 0, cornerRadius, 0);
+
 }
 
 %new
